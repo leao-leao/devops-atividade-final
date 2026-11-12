@@ -1,0 +1,22 @@
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      hints.default_config.enabled: false   # só coleta containers com label co.elastic.logs/enabled=true
+
+processors:
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""           # joga os campos do JSON (status_code, response_time_ms...) na raiz do documento
+      overwrite_keys: true
+      add_error_key: true
+  - add_docker_metadata: ~
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  index: "tarefas-api-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "tarefas-api-logs"
+setup.template.pattern: "tarefas-api-logs-*"
+setup.ilm.enabled: false
+logging.level: info

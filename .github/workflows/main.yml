@@ -1,0 +1,99 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ---------- ETAPA 2: CI ----------
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.vars.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package.json
+
+      - name: Instalar dependências
+        working-directory: app
+        run: npm install
+
+      - name: Executar testes automatizados
+        working-directory: app
+        run: npm test
+
+      - name: Definir nome da imagem (minúsculo)
+        id: vars
+        run: echo "image=${REGISTRY}/${IMAGE_NAME,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login no GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build da imagem Docker (e push para o GHCR na branch main)
+        uses: docker/build-push-action@v5
+        with:
+          context: app
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ steps.vars.outputs.image }}:${{ github.sha }}
+            ${{ steps.vars.outputs.image }}:latest
+
+  # ---------- ETAPA 3: CD ----------
+  deploy:
+    needs: ci
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Criar cluster Kubernetes (Kind)
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: devops
+
+      - uses: azure/setup-helm@v4
+
+      - name: Secret para puxar imagem do GHCR
+        run: |
+          kubectl create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy com Helm
+        run: |
+          helm upgrade --install tarefas-api ./helm/tarefas-api \
+            --set image.repository=${{ needs.ci.outputs.image }} \
+            --set image.tag=${{ github.sha }} \
+            --set imagePullSecrets[0].name=ghcr-pull \
+            --wait --timeout 3m
+
+      - name: Verificar recursos e testar o serviço (NodePort)
+        run: |
+          kubectl get pods,svc -o wide
+          NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+          curl --fail --retry 5 --retry-delay 3 http://$NODE_IP:30080/health

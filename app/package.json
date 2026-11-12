@@ -1,0 +1,14 @@
+{
+  "name": "devops-tarefas-api",
+  "version": "1.0.0",
+  "description": "API simples de tarefas usada na Atividade Final de DevOps",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

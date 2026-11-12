@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tarefas-api
+description: Chart Helm da API de tarefas (Atividade Final DevOps)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
