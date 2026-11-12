@@ -257,7 +257,7 @@ const doc = new Document({
     {
       properties: { type: SectionType.NEXT_PAGE, page: pageBase({ pageNumbers: { start: 4 } }) },
       headers: { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 20 })] })] }) },
-      children: [...b, ...ref, ...apend],
+      children: [...b, ...ref],
     },
   ],
 });
