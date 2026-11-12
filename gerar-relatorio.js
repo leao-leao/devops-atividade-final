@@ -8,8 +8,9 @@ const {
 const FONT = 'Arial';
 const AUTORES = ['Alan dos Anjos Leão', 'Lucas Soares Vilhena'];
 const TITULO = 'DevOps na prática: pipeline CI/CD, Kubernetes com Helm e monitoramento com Elastic Stack';
-const INSTITUICAO = '[NOME DA INSTITUIÇÃO]';
-const CIDADE = '[CIDADE]';
+const INSTITUICAO = 'Universidade da Amazônia (UNAMA)';
+const CURSO = 'Ciência da Computação';
+const CIDADE = 'Belém – PA';
 const ANO = '2026';
 const REPO = 'https://github.com/leao-leao/devops-atividade-final';
 
@@ -77,7 +78,7 @@ const figs = (list, w, h) => new Table({
 const center = (t, o = {}, sp = {}) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { line: 360, ...sp }, children: [run(t, o)] });
 const capa = [
   center(INSTITUICAO, { bold: true }),
-  center('Curso: [NOME DO CURSO]'),
+  center('Curso: ' + CURSO),
   ...AUTORES.map((a, i) => center(a.toUpperCase(), { bold: true }, { before: i === 0 ? 2400 : 0 })),
   center(TITULO.toUpperCase(), { bold: true }, { before: 3200 }),
   center(CIDADE, {}, { before: 4200 }),
@@ -89,7 +90,7 @@ const rosto = [
   center(TITULO.toUpperCase(), { bold: true }, { before: 3000 }),
   new Paragraph({
     alignment: AlignmentType.JUSTIFIED, indent: { left: 4536 }, spacing: { line: 240, before: 2400, after: 480 },
-    children: [run('Relatório da Atividade Final apresentado à disciplina DevOps Tools, do curso de [NOME DO CURSO], da ' + INSTITUICAO + ', como requisito de avaliação.', { size: 20 })],
+    children: [run('Relatório da Atividade Final apresentado à disciplina DevOps Tools, do curso de ' + CURSO + ', da ' + INSTITUICAO + ', como requisito de avaliação.', { size: 20 })],
   }),
   new Paragraph({ indent: { left: 4536 }, spacing: { line: 240 }, children: [run('Professor: Rodrigo Marques', { size: 20 })] }),
   center(CIDADE, {}, { before: 3400 }),
