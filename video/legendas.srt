@@ -1,0 +1,53 @@
+1
+00:00:00,000 --> 00:00:19,640
+Olá! Neste vídeo apresentamos a atividade final de DevOps.
+Construímos uma API em Node ponto jota és, com pipeline de
+integração e entrega contínua no GitHub Actions, implantação
+em Kubernetes com Helm, e monitoramento de logs com a stack
+E L K.
+
+2
+00:00:20,140 --> 00:00:43,764
+O fluxo é simples. O desenvolvedor envia o código ao GitHub.
+O pipeline roda os testes, constrói a imagem Docker e
+publica no registro de contêineres. Em seguida, o Helm
+implanta a aplicação no Kubernetes. Em paralelo, os logs
+seguem pelo Filebeat até o Elasticsearch, e são visualizados
+no Kibana.
+
+3
+00:00:44,264 --> 00:01:03,591
+Na etapa dois, o pipeline executa a cada push. Primeiro roda
+os cinco testes unitários da API. Só se todos passarem, o
+pipeline constrói a imagem Docker. À direita, vemos a
+execução completa com sucesso, com os jobs de C I e de
+deploy em verde.
+
+4
+00:01:04,091 --> 00:01:19,288
+A imagem gerada é publicada automaticamente no GitHub
+Container Registry, com a tag ligada ao commit. Assim, cada
+versão da aplicação fica rastreável e pode ser reimplantada
+a qualquer momento.
+
+5
+00:01:19,788 --> 00:01:37,359
+Na etapa três, o deploy é feito com um chart Helm. O
+pipeline sobe um cluster Kind temporário e executa o comando
+helm upgrade install. À direita, o kubectl mostra os pods em
+execução e o serviço do tipo NodePort expondo a API.
+
+6
+00:01:37,859 --> 00:01:58,793
+Na etapa quatro, o Filebeat coleta os logs dos contêineres e
+os envia ao Elasticsearch. No Kibana montamos um painel com
+o volume de logs, a distribuição dos códigos de status HTTP
+e a latência das requisições, o que permite observar a saúde
+da aplicação em tempo real.
+
+7
+00:01:59,293 --> 00:02:16,305
+Concluindo, entregamos um ciclo completo de DevOps: do
+commit à observabilidade, tudo automatizado. O código e o
+relatório estão no repositório leao-leao barra devops-
+atividade-final, no GitHub. Obrigado!
