@@ -8,12 +8,18 @@ const B = (t) => new Paragraph({ numbering: { reference: 'b', level: 0 }, childr
 const CODE = (t) => new Paragraph({ spacing: { after: 60 }, shading: { type: ShadingType.CLEAR, fill: 'F2F2F2' }, children: [new TextRun({ text: t, font: 'Consolas', size: 20 })] });
 const PRINT = (t) => new Paragraph({ spacing: { before: 120, after: 200 }, border: { top: { style: 'single', size: 6, color: '999999', space: 4 }, bottom: { style: 'single', size: 6, color: '999999', space: 4 }, left: { style: 'single', size: 6, color: '999999', space: 4 }, right: { style: 'single', size: 6, color: '999999', space: 4 } }, alignment: AlignmentType.CENTER, children: [new TextRun({ text: `[ INSERIR PRINT: ${t} ]`, italics: true, color: '888888' })] });
 
+const { ImageRun, TableBorders } = require('docx');
+const NB = { style: 'none', size: 0, color: 'FFFFFF' };
+const noB = { top: NB, bottom: NB, left: NB, right: NB };
+const img = (f) => new ImageRun({ type: 'jpg', data: fs.readFileSync('docs/prints/' + f), transformation: { width: 210, height: 398 } });
+const cap = (t) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: t, italics: true, size: 18 })] });
+const pair = (a, ta, b, tb) => new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [4680, 4680], borders: TableBorders.NONE, rows: [new TableRow({ children: [[a, ta], [b, tb]].filter((x) => x[0]).map(([f, t]) => new TableCell({ width: { size: 4680, type: WidthType.DXA }, borders: noB, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [img(f)] }), cap(t)] })) })] });
 const cell = (t, w, head) => new TableCell({ width: { size: w, type: WidthType.DXA }, shading: head ? { type: ShadingType.CLEAR, fill: 'D9E2F3' } : undefined, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [new Paragraph({ children: [new TextRun({ text: t, bold: head })] })] });
 const table = (rows, widths) => new Table({ width: { size: widths.reduce((a, b) => a + b), type: WidthType.DXA }, columnWidths: widths, rows: rows.map((r, i) => new TableRow({ children: r.map((c, j) => cell(c, widths[j], i === 0)) })) });
 
 const c = [];
 c.push(new Paragraph({ heading: HeadingLevel.TITLE, children: [new TextRun('Atividade Final – DevOps na Prática')] }));
-c.push(P('Disciplina: DevOps Tools    |    Grupo: [nomes dos integrantes]    |    Repositório: [link do GitHub]'));
+c.push(P('Disciplina: DevOps Tools    |    Grupo: [nomes dos integrantes]    |    Repositório: https://github.com/leao-leao/devops-atividade-final (privado)'));
 
 c.push(H1('Etapa 1 – Conceitos Fundamentais de DevOps'));
 c.push(H2('1.1 O que é DevOps e sua relação com Metodologias Ágeis'));
@@ -47,8 +53,9 @@ c.push(P('O pipeline está em .github/workflows/main.yml e é disparado em push 
 c.push(B('Instalação das dependências e testes automatizados (npm test, 5 testes com node:test);'));
 c.push(B('Build da imagem Docker (app/Dockerfile, baseada em node:20-alpine, executando como usuário não-root e com HEALTHCHECK);'));
 c.push(B('Push da imagem para o GitHub Container Registry (ghcr.io), com tags do SHA do commit e latest (somente em push na main).'));
-c.push(PRINT('pipeline do GitHub Actions executado com sucesso (aba Actions)'));
-c.push(PRINT('imagem publicada no GHCR (aba Packages do repositório)'));
+c.push(pair('01-pipeline-sucesso.jpg', 'Figura 1 – Pipeline CI-CD executado com sucesso (jobs ci e deploy, 2m5s)', '02-ci-testes.jpg', 'Figura 2 – Job ci: 5 testes automatizados aprovados'));
+c.push(P(' '));
+c.push(pair('05-imagem-ghcr.jpg', 'Figura 3 – Imagem publicada no GitHub Container Registry (ghcr.io)'));
 
 c.push(H1('Etapa 3 – Continuous Deployment + Orquestração'));
 c.push(P('O diretório helm/tarefas-api contém o chart (Chart.yaml, values.yaml e templates de Deployment, Service e Ingress opcional). O Deployment roda 2 réplicas com readiness/liveness probes em /health e limites de recursos. O Service é do tipo NodePort (porta 30080); o Ingress pode ser habilitado em values.yaml (ingress.enabled=true).'));
@@ -56,8 +63,7 @@ c.push(P('O job "deploy" do pipeline roda após o CI: cria um cluster Kind efêm
 c.push(CODE('kind create cluster'));
 c.push(CODE('helm upgrade --install tarefas-api ./helm/tarefas-api --set image.repository=ghcr.io/<usuario>/<repo> --set image.tag=latest'));
 c.push(CODE('kubectl get pods,svc'));
-c.push(PRINT('kubectl get pods,svc mostrando o serviço rodando no Kubernetes'));
-c.push(PRINT('resposta do serviço (curl/navegador em /health)'));
+c.push(pair('03-deploy-helm.jpg', 'Figura 4 – helm upgrade --install no cluster Kubernetes (STATUS: deployed)', '04-kubernetes-pods-svc.jpg', 'Figura 5 – kubectl get pods,svc: 2 pods Running, serviço NodePort 80:30080 e resposta {"status":"ok"}'));
 
 c.push(H1('Etapa 4 – Logging e Métricas'));
 c.push(P('A pasta elk/ possui um docker-compose.yml com a aplicação, Elasticsearch, Kibana e Filebeat (versão 8.13.4). Para subir: "docker compose up -d --build" dentro de elk/, e depois "./gerar-trafego.ps1" para gerar requisições.'));
