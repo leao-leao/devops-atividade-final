@@ -7,3 +7,5 @@
 - `Relatorio_DevOps.docx` – relatório (Etapas 1 e 5)
 
 Antes do push: ajuste `image.repository` em `helm/tarefas-api/values.yaml` (opcional, o pipeline sobrescreve).
+
+Dashboard Kibana: importe elk/kibana-dashboard.ndjson (Stack Management > Saved Objects > Import).

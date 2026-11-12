@@ -68,14 +68,16 @@ c.push(pair('03-deploy-helm.jpg', 'Figura 4 – helm upgrade --install no cluste
 c.push(H1('Etapa 4 – Logging e Métricas'));
 c.push(P('A pasta elk/ possui um docker-compose.yml com a aplicação, Elasticsearch, Kibana e Filebeat (versão 8.13.4). Para subir: "docker compose up -d --build" dentro de elk/, e depois "./gerar-trafego.ps1" para gerar requisições.'));
 c.push(H2('Como o Filebeat coletou os dados'));
-c.push(B('A aplicação escreve cada log em JSON na saída padrão (stdout); o Docker grava isso em /var/lib/docker/containers/<id>/*.log.'));
-c.push(B('O Filebeat monta esse diretório (somente leitura) e o docker.sock, e usa autodiscover do provider "docker": só coleta containers com a label co.elastic.logs/enabled=true (a aplicação).'));
+c.push(B('A aplicação escreve cada log em JSON na saída padrão (stdout); o Docker (driver json-file) grava isso em /var/lib/docker/containers/<id>/<id>-json.log.'));
+c.push(B('O Filebeat monta esse diretório (somente leitura) e usa o input "container" para ler esses arquivos. O processador add_docker_metadata identifica de qual container veio cada linha, e drop_event descarta tudo que não for do container tarefas-api (Elasticsearch, Kibana etc.).'));
 c.push(B('O processador decode_json_fields transforma o campo "message" (texto JSON) em campos individuais: status_code, response_time_ms, method, path, level.'));
 c.push(B('O Filebeat envia os eventos ao Elasticsearch no índice tarefas-api-logs-AAAA.MM.DD, que o Kibana lê por meio de um Data View (padrão tarefas-api-logs-*).'));
 c.push(H2('Dashboard no Kibana (http://localhost:5601)'));
 c.push(B('Logs em tempo real: Discover (ou Observability > Logs) com o Data View tarefas-api-logs-*, atualização automática ligada.'));
 c.push(B('Métricas de requisições: Dashboard com (a) gráfico de barras/rosca com contagem por status_code; (b) linha com média e percentil 95 de response_time_ms ao longo do tempo; (c) tabela por path.'));
-c.push(PRINT('dashboard do Kibana com logs e métricas'));
+c.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync('docs/prints/06-kibana-dashboard.png'), transformation: { width: 560, height: 437 } })] }));
+c.push(cap('Figura 6 – Dashboard no Kibana: logs em tempo real (396 documentos), requisições por status_code e tempo de resposta (média e p95)'));
+c.push(P('O dashboard é criado automaticamente importando elk/kibana-dashboard.ndjson (Stack Management > Saved Objects > Import), gerado por elk/gerar-dashboard.js. Ele atualiza a cada 5 segundos.'));
 
 c.push(H1('Etapa 5 – Relatório Final'));
 c.push(H2('5.1 Passo a passo da implementação'));
@@ -87,12 +89,14 @@ c.push(H2('5.1 Passo a passo da implementação'));
   'Subida da stack Filebeat + Elasticsearch + Kibana e criação do dashboard.',
   'Geração de tráfego e coleta dos prints para o relatório.',
 ].forEach((t) => c.push(B(t)));
-c.push(H2('5.2 Desafios enfrentados (ajuste conforme a experiência real do grupo)'));
+c.push(H2('5.2 Desafios enfrentados'));
 [
   'O nome da imagem no GHCR precisa estar em minúsculas; o workflow converte o nome do repositório automaticamente.',
   'Em runners do GitHub não existe um cluster permanente; foi usado Kind efêmero no job de deploy para demonstrar o CD de ponta a ponta.',
   'Imagens do GHCR são privadas por padrão; foi criado um imagePullSecret com o GITHUB_TOKEN.',
-  'Os logs chegavam ao Elasticsearch como texto único; foi necessário decodificar o JSON no Filebeat para ter status_code e response_time_ms como campos numéricos agregáveis.',
+  'Os logs chegavam ao Elasticsearch como texto único; foi necessário decodificar o JSON no Filebeat (decode_json_fields) para ter status_code e response_time_ms como campos numéricos agregáveis.',
+  'O autodiscover do Filebeat não encontrou o container, e o Docker usava o driver de log "local", que não gera arquivos *-json.log. A solução foi fixar logging.driver: json-file no docker-compose e ler os arquivos com o input "container".',
+  'O Elasticsearch rejeitava os eventos (erro 400) porque o campo "service" do log da aplicação (texto) conflitava com o campo "service" (objeto) do esquema ECS do Filebeat. O campo foi renomeado para "app".',
   'O Elasticsearch consome bastante memória; foi limitado o heap a 512 MB e usado modo single-node.',
 ].forEach((t) => c.push(B(t)));
 c.push(H2('5.3 Reflexão crítica: como o DevOps agrega valor ao ciclo de vida do software'));

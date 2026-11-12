@@ -14,7 +14,7 @@ function createApp({ logger = (entry) => console.log(JSON.stringify(entry)) } = 
       logger({
         '@timestamp': new Date().toISOString(),
         level: res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info',
-        service: 'tarefas-api',
+        app: 'tarefas-api',
         version: VERSION,
         method: req.method,
         path: req.path,

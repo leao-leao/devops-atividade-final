@@ -1,16 +1,21 @@
-filebeat.autodiscover:
-  providers:
-    - type: docker
-      hints.enabled: true
-      hints.default_config.enabled: false   # só coleta containers com label co.elastic.logs/enabled=true
+filebeat.inputs:
+  - type: container
+    paths:
+      - /var/lib/docker/containers/*/*.log
 
 processors:
+  - add_docker_metadata: ~
+  # só interessa o log da aplicação (descarta logs do próprio Elasticsearch, Kibana e Filebeat)
+  - drop_event:
+      when:
+        not:
+          equals:
+            container.name: "tarefas-api"
   - decode_json_fields:
       fields: ["message"]
       target: ""           # joga os campos do JSON (status_code, response_time_ms...) na raiz do documento
       overwrite_keys: true
       add_error_key: true
-  - add_docker_metadata: ~
 
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
